@@ -1,37 +1,77 @@
 class Flag
-  def initialize(image_path, end_position)
+  Slice = Struct.new(:image, :x, :y, :z, :y_offset)
+  def initialize(image_path)
     @image = Gosu::Image.new(image_path, retro: true)
-    
+
     @x = $window.width/2
     @y = 10
     @z = -1
 
+    @two_pi = Math::PI * 2
+
     @slices = []
-    @slice_width = 4
+    @slice_width = 6
+
     @wave = 0
-    @wave_factor = 0.2
-    @wave_multiplier = 13.0
-    @wave_step   = 0.2
-    @waveform    = 0
+    @wave_frequency = 0.02
+    @wave_amplitude = 4
+    @wave_step = 0.005
 
     @wave_travel = 0
+    @font = Gosu::Font.new(28)
 
     slice_image
   end
 
-  def draw
-    @slices.each_with_index do |slice, i|
-      step_sine_wave
-      slice.draw(@x + @slice_width * i, @y + (@wave * @wave_multiplier), @z)
-    end
-
-    @wave_travel += @wave_step
-    @wave = @wave_travel
+  def x=(n)
+    @x = n
+    @slices.each {|s| s.y = @x}
   end
 
-  def step_sine_wave
-    @waveform += @wave_step
-    @wave = (Math.sin(@waveform) * @wave_factor)
+  def y=(n)
+    @y = n
+    @slices.each {|s| s.y = @y}
+  end
+
+  def z=(n)
+    @z = n
+    @slices.each {|s| s.y = @z}
+  end
+
+  def draw
+    @slices.each_with_index do |slice, i|
+      slice.image.draw(slice.x + @slice_width * i, slice.y + slice.y_offset, slice.z)
+    end
+
+    if Gosu.button_down?(Gosu::KbTab)
+      @font.draw_text(
+"
+Frequency: #{@wave_frequency}
+Amplitude: #{@wave_amplitude}
+wave_step: #{@wave_step}
+wave_travel: #{@wave_travel}
+",
+        10, 10, 10
+      )
+    end
+  end
+
+  def update
+    delta = $window.delta
+    @slices.each_with_index do |slice, i|
+      slice.y_offset = step_sine_wave(i + @wave_travel)
+    end
+
+    @wave_travel += 1
+
+    # @wave_frequency += 0.01 if Gosu.button_down?(Gosu::KbUp)
+    # @wave_frequency -= 0.01 if Gosu.button_down?(Gosu::KbDown)
+    # @wave_amplitude += 0.01 if Gosu.button_down?(Gosu::KbRight)
+    # @wave_amplitude -= 0.01 if Gosu.button_down?(Gosu::KbLeft)
+  end
+
+  def step_sine_wave(time)
+    @wave = @wave_amplitude * Math.sin(@two_pi * @wave_frequency * time)
   end
 
   def slice_image
@@ -40,7 +80,7 @@ class Flag
         @image.draw(-(i * @slice_width),0,0)
       end
 
-      @slices << slice
+      @slices << Slice.new(slice, @x, @y, @z, 0)
     end
   end
 end
