@@ -12,9 +12,21 @@ class Window < Gosu::Window
 
     @flag = Flag.new("flags/#{ARGV[0].strip.downcase}.png")
     @pole = Pole.new
+
+    @record = false
   end
 
   def draw
+    if @record
+      Gosu.render(width, height) do
+        render
+      end.save("images/#{Time.now.to_i}.png")
+    end
+
+    render
+  end
+
+  def render
     @pole.draw
     @flag.draw
   end
