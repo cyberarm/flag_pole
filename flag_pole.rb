@@ -12,8 +12,10 @@ class Window < Gosu::Window
 
     @flag = Flag.new("flags/#{ARGV[0].strip.downcase}.png")
     @pole = Pole.new
+    @driver = Driver.new(@flag, :half_staff)
 
     @record = false
+    @drive_flag = true
   end
 
   def draw
@@ -33,9 +35,15 @@ class Window < Gosu::Window
 
   def update
     @last_frame_time = Gosu.milliseconds
+    self.caption = "#{Gosu.fps}"
 
+    @driver.update if @drive_flag
     @pole.update
     @flag.update
+  end
+
+  def button_up(id)
+    @drive_flag = !@drive_flag if id == Gosu::KbSpace
   end
 
   def delta

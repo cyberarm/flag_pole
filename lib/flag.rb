@@ -1,20 +1,22 @@
 class Flag
   Slice = Struct.new(:image, :x, :y, :z, :y_offset)
+
+  attr_reader :x, :y, :z, :image
   def initialize(image_path)
     @image = Gosu::Image.new(image_path, retro: true)
 
     @x = $window.width/2
-    @y = 10
+    @y = $window.height - (@image.height + 10)
     @z = -1
 
     @two_pi = Math::PI * 2
 
     @slices = []
-    @slice_width = 10
+    @slice_width = 2
 
     @wave = 0
-    @wave_frequency = 0.003
-    @wave_amplitude = 200
+    @wave_frequency = 0.1
+    @wave_amplitude = 10
     @wave_time = 0
 
     @font = Gosu::Font.new(28)
@@ -47,11 +49,11 @@ class Flag
 
     if Gosu.button_down?(Gosu::KbTab)
       @font.draw_text(
-"
+"advance_time: #{@advance_time}
 Frequency: #{@wave_frequency}
 Amplitude: #{@wave_amplitude}
-wave_step: #{@wave_step}
-wave_travel: #{@wave_travel}
+wave_time: #{@wave_time}
+wave: #{@wave}
 ",
         10, 10, 10
       )
@@ -74,7 +76,7 @@ wave_travel: #{@wave_travel}
 
   def step_cosine_wave(x)
     # @wave_amplitude * Math.cos(@two_pi * @wave_frequency * step)
-    (@wave_amplitude * (Math.cos(@wave_time * @wave_frequency + x) + 1) / 2) * x/@image.width - 1
+    @wave = (@wave_amplitude * (Math.cos(@wave_frequency * (@wave_time + x)) + 1) / 2) * x/@image.width - 1
   end
 
   def slice_image
